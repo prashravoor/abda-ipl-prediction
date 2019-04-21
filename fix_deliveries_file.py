@@ -74,13 +74,27 @@ def fix_deliveries_data(deliveries_file='data/all_deliveries.csv', names_file='d
     inns = []
     for i in df.Innings:
         if 'Super Over' in i:
-            inns = '3'
+            inns.append('3')
         else:
-            inns = i
+            inns.append(i)
 
     df.Innings = inns
     df.to_csv(deliveries_out_file, index=False, header=True)
 
+def get_bowler_over_stats(df_file='data/all_deliveries_names_fixed.csv', outfile='data/bowler_over_stats.csv'):
+    df = pd.read_csv(df_file)
+    bowler_over = df.loc[:,['Delivery', 'Innings', 'Bowler']]
+    bowler_over['Over'] = [int(str(x).split('.')[0]) for x in bowler_over.Delivery] # Convert 0.1,0.2 to over 0 etc.
+    bowler_over = bowler_over.drop('Delivery', axis=1)
+
+    rows = []
+    for g,h in bowler_over.groupby(['Over', 'Innings', 'Bowler']):
+        # Form rows of the format [Over number, Innings, Bowler, Couont of Overs]
+        # Divide count of rows by 6, to compensate for repititions in the deliveries (average 6 balls per over)
+        rows.append([g[0], g[1], g[2], h.Bowler.count()/6])
+
+    out = pd.DataFrame(data=rows, columns=['Over', 'Innings', 'Bowler', 'Count'])
+    out.to_csv(outfile, header=True, index=False)
 
 if __name__ == '__main__':
     fix_deliveries_data()
