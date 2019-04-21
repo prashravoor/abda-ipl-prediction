@@ -10,7 +10,6 @@ fit = {}
 feature_names = ['Delivery', 'Innings', 'Batsman',
                  'Bowler', 'BowlerOver', 'Wickets', 'TeamScore']
 result_priors = [.2, .6, .2]  # Extras, Runs, Wicket
-runs_priors = [.22, .22, .166, .05, .157, .021, .166]  # 0 - 6
 
 
 def load_model(feature, data_dir='data'):
@@ -124,7 +123,7 @@ def predict_delivery(attributes, feature):
             r[2] = r[2]/(w*w)
         # print(d, r)
         # Threshold for Wicket is 11.5%, Extra is 22%
-        if r[2] >= .115:
+        if r[2] >= .1:
             prev_result.append('Wicket')
             return 'Wicket'
         if r[0] >= .22:
@@ -137,7 +136,7 @@ def predict_delivery(attributes, feature):
         for i in range(0, 7):
             c = prev_runs.count(i) + 1
             if c > 1:
-                r[i] /= (c*c)
+                r[i] /= (c*4)
         rs = np.argmax(r, axis=0)
         prev_runs.append(rs)
         return rs

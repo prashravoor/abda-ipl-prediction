@@ -50,18 +50,17 @@ def fix_deliveries_data(deliveries_file='data/all_deliveries.csv', names_file='d
     df = pd.read_csv(deliveries_file)
     name_map = {}
 
-    """
     name_map['DJ Bravo'] = 'Dwayne Bravo'
     name_map['DM Bravo'] = 'Darren Bravo'
     name_map['RG Sharma'] = 'Rohit Sharma'
     name_map['R Sharma'] = 'Rahul Sharma'
     name_map['BAW Mendis'] = 'Tharindu Mendis'
     name_map['BMAJ Mendis'] = 'Jeevan Mendis'
-    """
+
     with open(names_file) as f:
         for line in f.readlines():
             parts = [x.strip() for x in line.split(',') if x and x.strip()]
-            if len(parts) > 0:
+            if len(parts) == 2:
                 name_map[parts[0]] = parts[1]
         f.close()
 
@@ -98,4 +97,5 @@ def get_bowler_over_stats(df_file='data/all_deliveries_names_fixed.csv', outfile
 
 if __name__ == '__main__':
     fix_deliveries_data()
+    get_bowler_over_stats()
     make_clusters()

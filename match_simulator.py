@@ -92,7 +92,9 @@ class AllRounder(Batsman, Bowler):
         Batsman.__init__(self, name)
         Bowler.__init__(self, name)
         Player.__init__(self, name, True, True)
-
+    
+    def a_figures(self):
+        return Bowler.figures(self)
 
 class Team:
     def __init__(self, name, members):
@@ -120,7 +122,7 @@ class Innings:
         self.bowlers = {}
         # Role redressal - all batting team are batsmen
         batting_team_members = [Batsman(x.name) for x in batting_team.members]
-        bowling_team_members = [Bowler(x.name) for x in bowling_team.members]
+        bowling_team_members = bowling_team.members
         self.batting_team = Team(batting_team.name, batting_team_members)
         self.bowling_team = Team(bowling_team.name, bowling_team_members)
 
@@ -195,7 +197,10 @@ class Innings:
         print('Bowling Team: {}'.format(self.bowling_team.name))
         for bowler in self.bowlers:
             detail = bowler.name
-            detail += ' ' + bowler.figures()
+            if bowler.is_batsman:
+                detail += ' ' + bowler.a_figures()
+            else:
+                detail += ' ' + bowler.figures()
             print(detail)
 
         print('Overs: {}.{}'.format(int(self.deliveries/6), self.deliveries % 6))
@@ -364,7 +369,10 @@ def read_team():
 
 
 def get_toss_result(team1, team2):
-    return input('Who bats first? ')
+    name = input('Who bats first? ')
+    if team1.name == name:
+        return team1
+    return team2
 
 
 def convert_to_delivery_id(deliveries):
@@ -392,7 +400,7 @@ def select_bowler(team, innings, current_bowler, bowled_overs, balls):
                 b, bcount = bwl, x.iloc[0].Count
         new_bowler = b
     if not new_bowler or new_bowler == current_bowler:
-        new_bowler = bowlers_copy[random.randint(0, len(bowlers_copy))]
+        new_bowler = bowlers_copy[random.randint(0, len(bowlers_copy)-1)]
         print('Choosing random bowler {}'.format(new_bowler.name))
     return new_bowler
 

@@ -13,7 +13,7 @@ def create_clusters(bat_stats_in='data/bat_stats.csv', bowl_stats_in='data/bowl_
     df = pd.read_csv(bat_stats_in)
     bat_features = ['Inn', 'NO', 'Avg', 'SR']
     points = df.loc[:, bat_features]
-    points = points.fillna(0)
+    points = points.astype(float).fillna(0)
     points = StandardScaler().fit_transform(points)
 
     pca = PCA(n_components=2)
@@ -55,7 +55,7 @@ def create_clusters(bat_stats_in='data/bat_stats.csv', bowl_stats_in='data/bowl_
     df = pd.read_csv(bowl_stats_in)
     bowl_features = ['Inn', 'Econ', 'Avg', 'SR']
     points = df.loc[:, bowl_features]
-    points = points.fillna(0)
+    points = points.astype(float).fillna(0)
 
     points = StandardScaler().fit_transform(points)
 
