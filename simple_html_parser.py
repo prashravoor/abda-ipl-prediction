@@ -7,6 +7,7 @@ def load_names(deliveries_file, teams_file):
     with open(deliveries_file) as file:
         for line in file.readlines():
             names.add(line.split(",")[2])
+            names.add(line.split(",")[3])
     file.close()
 
     # Some names don't have a proper conversion
@@ -26,21 +27,21 @@ def load_names(deliveries_file, teams_file):
         else:
             name_map[name] = name
     
-    name_map['DJ Bravo'] = 'Dwayne Bravo'
-    name_map['DM Bravo'] = 'Darren Bravo'
-    name_map['RG Sharma'] = 'Rohit Sharma'
-    name_map['R Sharma'] = 'Rahul Sharma'
-    name_map['BAW Mendis'] = 'Tharindu Mendis'
-    name_map['BMAJ Mendis'] = 'Jeevan Mendis'
-    name_map['J Theron'] = 'Rusty Theron'
-
-    """
-    print(len(name_map))
-    with open('yaml\\csv\\name_map.csv', 'w') as out:
-        for key,value in name_map.items():
-            out.write(key + ',' + value + '\n')
-    out.close()
-    """
+    name_map['Dwayne Bravo'] =  'DJ Bravo'
+    name_map['Darren Bravo'] = 'DM Bravo'
+    name_map['Rohit Sharma'] = 'RG Sharma'
+    name_map['Rahul Sharma'] = 'R Sharma'
+    name_map['Tharindu Mendis'] = 'BAW Mendis' 
+    name_map['Jeevan Mendis'] = 'BMAJ Mendis'
+    name_map['Rusty Theron'] = 'J Theron'
+    name_map['KL Rahul'] = 'K Rahul'
+    name_map['F Maharoof'] = 'M Maharoof'
+    name_map['M Jayawardane'] = 'DPMD Jayawardene'
+    name_map['A Morkel'] = 'JA Morkel'
+    name_map['Chamara Silva'] = 'LPC Silva'
+    name_map['Gnaneswara Rao'] = 'Y Gnaneswara Rao'
+    name_map['D Mascarenhas'] = 'AD Mascarenhas'
+    name_map['L Malinga'] = 'SL Malinga'
 
     with open(teams_file, 'r') as file:
         for l in file.readlines():
@@ -92,15 +93,6 @@ def get_all_player_stats(deliveries_file='data/all_deliveries.csv', teams_file='
                                          'BBI', 'BBM', 'Econ', 'Avg', 'SR', '5w', '10w'])))
         pf.close()
 
-    """
-    names_map  = {}
-    with open('yaml/csv/names_map.csv') as f:
-        for l in f.readlines():
-            parts = l.split(',')
-            parts = [x.strip() for x in parts if x.strip()]
-            names_map[parts[1]] = parts[0]
-    f.close()
-    """
     names_map = load_names(deliveries_file, teams_file)
     print('Will fetch statistics for {} names'.format(len(names_map)))
     
@@ -126,13 +118,13 @@ def get_all_player_stats(deliveries_file='data/all_deliveries.csv', teams_file='
 
     names = names_map.keys()
     failed_names = []
-    #cnt = 0
+    # cnt = 0
     # Team IDs
     for n in names:
-        #if cnt >= 5:
+        # if cnt >= 5:
         #    break
-        #cnt += 1
-        if names_map[n] in mapper.values() or n in mapper.values():
+        # cnt += 1
+        if names_map[n] in mapper or n in mapper.values():
             print('Player {} already found, skipping'.format(n))
             continue
 
@@ -173,12 +165,15 @@ def get_all_player_stats(deliveries_file='data/all_deliveries.csv', teams_file='
         player_stats_url = 'https://www.cricbuzz.com/profiles/{}'.format(pid)
         stats_text = requests.get(player_stats_url).text
         st = BeautifulSoup(stats_text, features='html5lib')
-        name = st.find('h1').text
-        mapper[n] = name
+        name = st.find('h1')
+        if not name:
+            continue
+        name = name.text
+        mapper[names_map[n]] = name
         #if n in names_map:
         #    name_mapped_f.write('{},{}\n'.format(n, name))
         #else:
-        name_mapped_f.write('{},{}\n'.format(n, name))
+        name_mapped_f.write('{},{}\n'.format(names_map[n], name))
 
         row.append(str(pid))
         row.append(str(name))
@@ -214,7 +209,10 @@ def get_all_player_stats(deliveries_file='data/all_deliveries.csv', teams_file='
                 # Remove IPL
                 r = r[1:]
                 for v in r:
-                    bowl_row.append(str(v.text))
+                    if v.text == '-':
+                        bowl_row.append('0')
+                    else:
+                        bowl_row.append(str(v.text))
                 bowl_stats[pid] = bowl_row
                 bowlf.write('{}\n'.format(','.join(bowl_row)))
                 bowl_row_added = True
@@ -228,7 +226,7 @@ def get_all_player_stats(deliveries_file='data/all_deliveries.csv', teams_file='
 
         if not bowl_row_added:
             bowl_row = list(row)
-            bowl_row.extend(dummy_stats)
+            bowl_row.extend(dummy_stats[:-1])
             bowl_stats[pid] = bowl_row
             bowlf.write('{}\n'.format(','.join(bowl_row)))
             print('No Bowl stats found for player {}'.format(name))
