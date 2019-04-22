@@ -9,7 +9,7 @@ class Player:
         self.is_batsman = is_batsman
         self.is_bowler = is_bowler
 
-    def __str__(self):
+    def __repr__(self):
         return self.name
 
 
@@ -49,6 +49,9 @@ class Bowler(Player):
     def figures(self):
         return '{} / {} ({}.{})'.format(self.wickets, self.runs + self.extras, self.overs_bowled, self.num_deliveries)
 
+    def __repr__(self):
+        return self.name
+
 
 class Batsman(Player):
     def __init__(self, name):
@@ -86,15 +89,27 @@ class Batsman(Player):
             return '{} ({})'.format(self.runs, self.num_deliveries)
         return '{}* ({})'.format(self.runs, self.num_deliveries)
 
+    def __repr__(self):
+        return self.name
+
 
 class AllRounder(Batsman, Bowler):
     def __init__(self, name):
         Batsman.__init__(self, name)
         Bowler.__init__(self, name)
         Player.__init__(self, name, True, True)
-    
+
+    def __repr__(self):
+        return self.name
+
     def a_figures(self):
         return Bowler.figures(self)
+
+    def figures(self):
+        if self.overs_bowled > 0:
+            return Bowler.figures(self)
+        return Batsman.figures(self)
+
 
 class Team:
     def __init__(self, name, members):
@@ -191,10 +206,12 @@ class Innings:
             detail += '{} ({})'.format(player.runs, player.num_deliveries)
             if player.is_playing():
                 detail += '*'
-            print(detail)
-        print('Extras: {}\nTotal Score: {} - {}'.format(self.extras,
+            
+            if player.num_deliveries > 0 or player.playing or player.out:
+                print(detail)
+        print('\nExtras: {}\nTotal Score: {} - {}\n'.format(self.extras,
                                                         self.score, self.wickets))
-        print('Bowling Team: {}'.format(self.bowling_team.name))
+        print('Bowling Team: {}\n'.format(self.bowling_team.name))
         for bowler in self.bowlers:
             detail = bowler.name
             if bowler.is_batsman:
@@ -246,7 +263,8 @@ class Match:
         if event == 'Wicket':
             crossover = False
             striker = True
-            wicket_type = predict.predict_delivery(delivery, 'Wicket')
+            wicket_type = predict.predict_delivery(
+                delivery, 'Wicket')
             if wicket_type in ['caught', 'run out']:
                 striker = (random.random() < 0.5)
                 crossover = (random.random() < 0.5)
@@ -264,8 +282,10 @@ class Match:
             print('Batsman Figures: {}'.format(batsman.figures()))
         elif event == 'Extras':
             extra_ball = False
-            extra_type = predict.predict_delivery(delivery, 'ExtraType')
-            extra_runs = predict.predict_delivery(delivery, 'Extras')[0]
+            extra_type = predict.predict_delivery(
+                delivery, 'ExtraType')
+            extra_runs = predict.predict_delivery(
+                delivery, 'Extras')[0]
             if extra_type in ['wides', 'noballs']:
                 extra_ball = True
                 ball_counts = False
@@ -385,7 +405,15 @@ def select_bowler(team, innings, current_bowler, bowled_overs, balls):
     new_bowler = current_bowler
     bowlers_copy = team.get_bowlers().copy()
     count = 0
-    while count < 10 and new_bowler == current_bowler or (new_bowler in bowled_overs and bowled_overs[new_bowler] == 4):
+    to_remove = []
+    for bwl in bowlers_copy:
+        # print('Bowler in copy: ', bwl.name)
+        if bwl in bowled_overs and bowled_overs[bwl] >= 4:
+            to_remove.append(bwl)
+    for r in to_remove:
+        bowlers_copy.remove(r)
+
+    while count < 10 and new_bowler == current_bowler or (new_bowler in bowled_overs and bowled_overs[new_bowler] >= 4):
         count += 1
         try:
             bowlers_copy.remove(new_bowler)
@@ -400,8 +428,13 @@ def select_bowler(team, innings, current_bowler, bowled_overs, balls):
                 b, bcount = bwl, x.iloc[0].Count
         new_bowler = b
     if not new_bowler or new_bowler == current_bowler:
-        new_bowler = bowlers_copy[random.randint(0, len(bowlers_copy)-1)]
-        print('Choosing random bowler {}'.format(new_bowler.name))
+        new_bowler = None
+        for bwl in bowlers_copy:
+            if bwl in bowled_overs and bowled_overs[bwl] > 0:
+                new_bowler = bwl
+        if not new_bowler:
+            new_bowler = bowlers_copy[random.randint(0, len(bowlers_copy)-1)]
+            print('Choosing random bowler {}'.format(new_bowler.name))
     return new_bowler
 
 
@@ -449,6 +482,8 @@ for _, bat in df_bat.iterrows():
 for _, bowl in df_bowl.iterrows():
     bowl_clusters[bowl.Name] = bowl.Cluster
 
+random.seed()
+
 match = Match(bats_first, chasers)
 match.start_match()
 match.conduct_first_innings()
@@ -460,4 +495,7 @@ match.start_chase()
 match.conduct_chase()
 
 result = match.find_result()
-print('{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+print('\n\n')
+print('************* SUMMARY ****************')
+match.display()
+print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))

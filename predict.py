@@ -119,11 +119,12 @@ def predict_delivery(attributes, feature):
         if e > 0:
             r[0] = r[0]/e
 
-        if w > 0:
+        if w > 1:
             r[2] = r[2]/(w*w)
         # print(d, r)
-        # Threshold for Wicket is 11.5%, Extra is 22%
-        if r[2] >= .1:
+        # Threshold for Wicket is 10%, Extra is 22%
+        wick_thresh = .105
+        if r[2] >= wick_thresh:
             prev_result.append('Wicket')
             return 'Wicket'
         if r[0] >= .22:
@@ -136,7 +137,7 @@ def predict_delivery(attributes, feature):
         for i in range(0, 7):
             c = prev_runs.count(i) + 1
             if c > 1:
-                r[i] /= (c*4)
+                r[i] /= (c*2)
         rs = np.argmax(r, axis=0)
         prev_runs.append(rs)
         return rs

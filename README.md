@@ -11,8 +11,10 @@ Extract the contents of `yaml.zip` into the `yaml` folder <br>
 
 ## Running
 Simply run the driver file `train_data.py` to perform all the necessary functions <br>
-NOTE: If that doesn't work, run the individual python files through `python <filename>` as it appears in `train_data.py`
 
-## TODO
-Prediction
-
+## Prediction
+Save the playing XI for both teams in the `data` directory, as file `<team_name>.csv` as a list of names separated by comma (Some example files are added to the repo), for e.g. `rcb.csv`, `kkr.csv` etc.. The order specified in the file will be the batting order for the teams. The bowler selection is predicted based on past statistics. <br>
+<br> 
+Run the script `match_simulator.py` to start the match prediction <br>
+Enter the team names using just the 3 or 2 letter prefix used to save the team file (Like kkr, rcb) <br>
+The prediction will then run to completion, and displays the result <br>
