@@ -1,6 +1,8 @@
 import random
 import predict
 import pandas as pd
+import sys
+import datetime
 
 
 class Player:
@@ -123,6 +125,13 @@ class Team:
                 bowlers.append(player)
 
         return bowlers
+
+    
+    def display(self):
+        print('Team: {}'.format(self.name))
+        for m in self.members:
+            print(m.name)
+        print()
 
 
 class Innings:
@@ -470,6 +479,16 @@ chasers = team1
 if team1.name == bats_first.name:
     chasers = team2
 
+filename = 'predictions/{}_{}_{}.txt'.format(team1.name, team2.name, '_'.join(datetime.date.today().strftime('%B %d').split()))
+outfile = open(filename, 'w')
+orgstdout = sys.stdout
+sys.stdout = outfile
+
+team1.display()
+team2.display()
+
+print('Batting First: {}\n'.format(bats_first.name))
+    
 bowler_over = pd.read_csv('data/bowler_over_stats.csv')
 bat_clusters = {}
 bowl_clusters = {}
@@ -499,3 +518,12 @@ print('\n\n')
 print('************* SUMMARY ****************')
 match.display()
 print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+
+outfile.close()
+sys.stdout = orgstdout
+
+print('\n\n')
+print('************* SUMMARY ****************')
+match.display()
+print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+

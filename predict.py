@@ -5,6 +5,7 @@ import numpy as np
 import hashlib
 from sklearn.model_selection import train_test_split
 import pickle
+import random
 
 fit = {}
 feature_names = ['Delivery', 'Innings', 'Batsman',
@@ -123,7 +124,7 @@ def predict_delivery(attributes, feature):
             r[2] = r[2]/(w*w)
         # print(d, r)
         # Threshold for Wicket is 10%, Extra is 22%
-        wick_thresh = .105
+        wick_thresh = random.uniform(0.07, 0.12)
         if r[2] >= wick_thresh:
             prev_result.append('Wicket')
             return 'Wicket'
@@ -137,7 +138,7 @@ def predict_delivery(attributes, feature):
         for i in range(0, 7):
             c = prev_runs.count(i) + 1
             if c > 1:
-                r[i] /= (c*2)
+                r[i] /= (c*16)
         rs = np.argmax(r, axis=0)
         prev_runs.append(rs)
         return rs
