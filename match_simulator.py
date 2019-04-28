@@ -322,7 +322,8 @@ class Match:
                                            self.current_inns.bowlers, self.current_inns.deliveries)
                 deliveries = 0
                 cur_ball_num = 0
-                print('Over Up. New Bowler: {}'.format(new_bowler.name))
+                if new_bowler:
+                    print('Over Up. New Bowler: {}'.format(new_bowler.name))
                 print('Bowler Figures: {}'.format(
                     self.current_inns.bowler.figures()))
                 self.current_inns.over_up(new_bowler)
@@ -379,6 +380,7 @@ def read_team():
     team_name = input('Team Name: ')
     members = []
 
+    bowlers_count = 0
     with open('data/{}.csv'.format(team_name)) as f:
         for l in f.readlines():
             ps = [x.strip() for x in l.split(',')]
@@ -388,10 +390,18 @@ def read_team():
                 members.append(Batsman(p))
             elif 'Allrounder' in player_roles[p]:
                 members.append(AllRounder(p))
+                bowlers_count += 1
             else:
                 members.append(Bowler(p))
+                bowlers_count += 1
         f.close()
 
+    if bowlers_count == 5:
+        # Add one extra bowler
+        x = random.randint(0,6)
+        print('Making {} as a bowler randomly'.format(members[x]))
+        members[x] = Bowler(members[x].name)
+    
     for m in members:
         print('{}'.format(m.name))
     return Team(team_name, members)
@@ -413,12 +423,14 @@ def select_bowler(team, innings, current_bowler, bowled_overs, balls):
     over = int(balls/6)
     new_bowler = current_bowler
     bowlers_copy = team.get_bowlers().copy()
+
     count = 0
     to_remove = []
     for bwl in bowlers_copy:
         # print('Bowler in copy: ', bwl.name)
         if bwl in bowled_overs and bowled_overs[bwl] >= 4:
             to_remove.append(bwl)
+        
     for r in to_remove:
         bowlers_copy.remove(r)
 
@@ -441,7 +453,7 @@ def select_bowler(team, innings, current_bowler, bowled_overs, balls):
         for bwl in bowlers_copy:
             if bwl in bowled_overs and bowled_overs[bwl] > 0:
                 new_bowler = bwl
-        if not new_bowler:
+        if not new_bowler and len(bowlers_copy) > 0:
             new_bowler = bowlers_copy[random.randint(0, len(bowlers_copy)-1)]
             print('Choosing random bowler {}'.format(new_bowler.name))
     return new_bowler
@@ -501,7 +513,7 @@ for _, bat in df_bat.iterrows():
 for _, bowl in df_bowl.iterrows():
     bowl_clusters[bowl.Name] = bowl.Cluster
 
-random.seed()
+# random.seed()
 
 match = Match(bats_first, chasers)
 match.start_match()

@@ -121,9 +121,10 @@ def predict_delivery(attributes, feature):
             r[0] = r[0]/e
 
         if w > 1:
-            r[2] = r[2]/(w*w)
+            r[2] = r[2]/(w*w*w)
         # print(d, r)
         # Threshold for Wicket is 10%, Extra is 22%
+        random.seed()
         wick_thresh = random.uniform(0.07, 0.12)
         if r[2] >= wick_thresh:
             prev_result.append('Wicket')

@@ -1,1 +1,7 @@
 sklearn
+pandas
+bs4
+numpy
+tkinter
+pygubu
+pickle

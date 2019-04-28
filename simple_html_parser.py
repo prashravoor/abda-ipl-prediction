@@ -41,7 +41,7 @@ def load_names(deliveries_file, teams_file):
     name_map['Chamara Silva'] = 'LPC Silva'
     name_map['Gnaneswara Rao'] = 'Y Gnaneswara Rao'
     name_map['D Mascarenhas'] = 'AD Mascarenhas'
-    name_map['L Malinga'] = 'SL Malinga'
+    name_map['Lasith Malinga'] = 'SL Malinga'
 
     with open(teams_file, 'r') as file:
         for l in file.readlines():
