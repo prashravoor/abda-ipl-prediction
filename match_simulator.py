@@ -3,7 +3,7 @@ import predict
 import pandas as pd
 import sys
 import datetime
-
+import tkinter as tk
 
 class Player:
     def __init__(self, name, is_batsman, is_bowler):
@@ -372,29 +372,63 @@ class Match:
         self.second_innings.display()
 
 
-def read_team():
+def read_team1(team11,team1_player):
     # global full_team
     global player_roles
 
     # team_name = "Team {}".format(random.randint(0, 10))
-    team_name = input('Team Name: ')
+    team_name = team11 #input('Team Name: ')
     members = []
 
     bowlers_count = 0
-    with open('data/{}.csv'.format(team_name)) as f:
-        for l in f.readlines():
-            ps = [x.strip() for x in l.split(',')]
+    # with open('data/{}.csv'.format(team_name)) as f:
+    #    for l in f.readlines():
+    ps = [x.strip() for x in team1_player.split(',')]
 
-        for p in ps:
-            if 'Batsman' in player_roles[p]:
-                members.append(Batsman(p))
-            elif 'Allrounder' in player_roles[p]:
-                members.append(AllRounder(p))
-                bowlers_count += 1
-            else:
-                members.append(Bowler(p))
-                bowlers_count += 1
-        f.close()
+    for p in ps:
+        if 'Batsman' in player_roles[p]:
+            members.append(Batsman(p))
+        elif 'Allrounder' in player_roles[p]:
+            members.append(AllRounder(p))
+            bowlers_count += 1
+        else:
+            members.append(Bowler(p))
+            bowlers_count += 1
+        
+
+    if bowlers_count == 5:
+        # Add one extra bowler
+        x = random.randint(0,6)
+        print('Making {} as a bowler randomly'.format(members[x]))
+        members[x] = Bowler(members[x].name)
+    
+    for m in members:
+        print('{}'.format(m.name))
+    return Team(team_name, members)
+
+def read_team2(team22,team2_player):  #,team2_player):
+    # global full_team
+    global player_roles
+
+    # team_name = "Team {}".format(random.randint(0, 10))
+    team_name = team22 #input('Team Name: ')
+    members = []
+
+    bowlers_count = 0
+    #with open('data/{}.csv'.format(team_name)) as f:
+    #for l in f.readlines():
+    ps = [x.strip() for x in team2_player.split(',')]
+
+    for p in ps:
+        if 'Batsman' in player_roles[p]:
+            members.append(Batsman(p))
+        elif 'Allrounder' in player_roles[p]:
+            members.append(AllRounder(p))
+            bowlers_count += 1
+        else:
+            members.append(Bowler(p))
+            bowlers_count += 1
+    
 
     if bowlers_count == 5:
         # Add one extra bowler
@@ -407,8 +441,8 @@ def read_team():
     return Team(team_name, members)
 
 
-def get_toss_result(team1, team2):
-    name = input('Who bats first? ')
+def get_toss_result(team1, team2,firstbat):
+    name = firstbat  #input('Who bats first? ')
     if team1.name == name:
         return team1
     return team2
@@ -483,59 +517,112 @@ for _, p in tmp.iterrows():
 
 del tmp
 
-team1 = read_team()
-team2 = read_team()
+import tkinter as tk
+import pygubu
 
-bats_first = get_toss_result(team1, team2)
-chasers = team1
-if team1.name == bats_first.name:
-    chasers = team2
+bowler_over =[]
+bowl_clusters=[]
+bat_clusters=[]
 
-filename = 'predictions/{}_{}_{}.txt'.format(team1.name, team2.name, '_'.join(datetime.date.today().strftime('%B %d').split()))
-outfile = open(filename, 'w')
-orgstdout = sys.stdout
-sys.stdout = outfile
-
-team1.display()
-team2.display()
-
-print('Batting First: {}\n'.format(bats_first.name))
+def simulate(team11,team22,firstbat,team1_player,team2_player): #,team2_player):  
+    global bowler_over, bat_clusters, bowl_clusters
     
-bowler_over = pd.read_csv('data/bowler_over_stats.csv')
-bat_clusters = {}
-bowl_clusters = {}
-df_bat = pd.read_csv('data/bat_clusters.csv')
-df_bowl = pd.read_csv('data/bowl_clusters.csv')
+    team1 = read_team1(team11,team1_player)
+    team2 = read_team2(team22,team2_player)#,team2_player)
 
-for _, bat in df_bat.iterrows():
-    bat_clusters[bat.Name] = bat.Cluster
+    bats_first = get_toss_result(team1, team2,firstbat)
+    chasers = team1
+    if team1.name == bats_first.name:
+        chasers = team2
 
-for _, bowl in df_bowl.iterrows():
-    bowl_clusters[bowl.Name] = bowl.Cluster
+    filename = 'predictions/{}_{}_{}.txt'.format(team1.name, team2.name, '_'.join(datetime.date.today().strftime('%B %d').split()))
+    outfile = open(filename, 'w')
+    orgstdout = sys.stdout
+    sys.stdout = outfile
 
-# random.seed()
+    team1.display()
+    team2.display()
 
-match = Match(bats_first, chasers)
-match.start_match()
-match.conduct_first_innings()
+    print('Batting First: {}\n'.format(bats_first.name))
+        
+    bowler_over = pd.read_csv('data/bowler_over_stats.csv')
+    bat_clusters = {}
+    bowl_clusters = {}
+    df_bat = pd.read_csv('data/bat_clusters.csv')
+    df_bowl = pd.read_csv('data/bowl_clusters.csv')
 
-del df_bat
-del df_bowl
+    for _, bat in df_bat.iterrows():
+        bat_clusters[bat.Name] = bat.Cluster
 
-match.start_chase()
-match.conduct_chase()
+    for _, bowl in df_bowl.iterrows():
+        bowl_clusters[bowl.Name] = bowl.Cluster
 
-result = match.find_result()
-print('\n\n')
-print('************* SUMMARY ****************')
-match.display()
-print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+    # random.seed()
 
-outfile.close()
-sys.stdout = orgstdout
+    match = Match(bats_first, chasers)
+    match.start_match()
+    match.conduct_first_innings()
 
-print('\n\n')
-print('************* SUMMARY ****************')
-match.display()
-print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+    del df_bat
+    del df_bowl
+
+    match.start_chase()
+    match.conduct_chase()
+
+    result = match.find_result()
+    print('\n\n')
+    print('************* SUMMARY ****************')
+    match.display()
+    print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+
+    outfile.close()
+    sys.stdout = orgstdout
+
+    print('\n\n')
+    print('************* SUMMARY ****************')
+    match.display()
+    print('\n\n{} vs {}. The result is: {}'.format(team1.name, team2.name, result))
+
+
+class Application:
+    def __init__(self, master):
+
+        #1: Create a builder
+        self.builder = builder = pygubu.Builder()
+
+        #2: Load an ui file
+        builder.add_from_file('newUI.ui')
+
+        #3: Create the widget using a master as parent
+        self.mainwindow = builder.get_object('Frame_2', master) 
+        
+        #4: For team1 entry 
+        self.team11 = builder.get_object('Entry_8')
+        
+        #5: For team2 entry 
+        self.team22 = builder.get_object('Entry_9')
+
+        #6: For team batting  entry 
+        self.firstbat = builder.get_object('Entry_10')
+
+        #7: For team1 Players
+        self.team1_player = builder.get_object('Text_1')
+
+        #8: For team1 Players
+        self.team2_player = builder.get_object('Text_2')
+        
+        builder.connect_callbacks(self)
+
+    def start(self):
+        self.mainwindow.master.withdraw()
+        simulate(self.team11.get(), self.team22.get(), self.firstbat.get(),self.team1_player.get("1.0",tk.END),self.team2_player.get("1.0",tk.END))
+        self.mainwindow.master.deiconify()
+      
+        #print("hi")
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    app = Application(root)
+    root.mainloop()
+
 
